@@ -1,0 +1,97 @@
+## HPA demo with a simple php-apache image
+## 1. Create the following deployment and svc:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+spec:
+  selector:
+    matchLabels:
+      run: php-apache
+  template:
+    metadata:
+    spec:
+      containers:
+      - name: php-apache
+        image: registry.k8s.io/hpa-example
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+  labels:
+    run: php-apache
+spec:
+
+
+➜  k8s-scaling  kubectl create -f php-demo-hpa.yaml
+
+## 2. Create the HPA with a min replicas of 1 , max of 10 and 50% CPU threshold
+
+➜  k8s-scaling  kubectl autoscale deployment php-apache --cpu-percent=50  --min=1 --max=10
+
+## Check the hpa status, see current CPU usage is unknown, and then 0.
+
+➜  k8s-scaling kubectl get hpa
+
+➜  k8s-scaling kubectl get hpa 
+NAME         REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+php-apache   Deployment/php-apache   cpu: 0%/50%   1         10        1          24m
+
+## Create some load to watch HPA in action/increasing the deployment replicas
+➜  k8s-scaling  kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+
+## In another terminal, watch the hpa adding new replicas as CPU grows:
+
+➜  k8s-scaling kubectl get hpa --watch
+NAME         REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+php-apache   Deployment/php-apache   cpu: 0%/50%   1         10        1          24m
+...
+...
+php-apache   Deployment/php-apache   cpu: 0%/50%   1         10        1          24m
+php-apache   Deployment/php-apache   cpu: 153%/50%   1         10        1          24m
+php-apache   Deployment/php-apache   cpu: 153%/50%   1         10        4          25m
+php-apache   Deployment/php-apache   cpu: 178%/50%   1         10        4          25m
+php-apache   Deployment/php-apache   cpu: 100%/50%   1         10        4          25m
+php-apache   Deployment/php-apache   cpu: 69%/50%    1         10        4          25m
+php-apache   Deployment/php-apache   cpu: 71%/50%    1         10        6          26m
+php-apache   Deployment/php-apache   cpu: 58%/50%    1         10        6          26m
+php-apache   Deployment/php-apache   cpu: 40%/50%    1         10        6          26m
+php-apache   Deployment/php-apache   cpu: 48%/50%    1         10        6          26m
+php-apache   Deployment/php-apache   cpu: 45%/50%    1         10        6          27m
+php-apache   Deployment/php-apache   cpu: 48%/50%    1         10        6          27m
+^C%
+➜  k8s-scaling kubectl get deploy
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+php-apache   6/6     6            6           29m
+
+
+## Stop the load-gen and observe how the HPA scale out the number of replicas over the next minutes.
+
+➜  k8s-scaling kubectl get hpa --watch
+NAME         REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+php-apache   Deployment/php-apache   cpu: 0%/50%   1         10        6          30m
+php-apache   Deployment/php-apache   cpu: 0%/50%   1         10        6          32m
+php-apache   Deployment/php-apache   cpu: 0%/50%   1         10        3          32m
+php-apache   Deployment/php-apache   cpu: 0%/50%   1         10        1          33m
+
+
+➜  k8s-scaling kubectl get deploy --watch
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+php-apache   6/6     6            6           17m
+....
+php-apache   6/2     6            6           21m
+php-apache   6/2     6            6           21m
+php-apache   2/2     2            2           21m
+php-apache   2/1     2            2           22m
+php-apache   2/1     2            2           22m
+php-apache   1/1     1            1           22m
+
