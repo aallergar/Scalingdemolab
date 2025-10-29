@@ -1,0 +1,39 @@
+## This is a basic demo of a VPA
+## and a sample application
+## Requirements: k8s cluster >= 1.28.
+#3 See VPA versions in :
+
+
+## INSTALL VPA 
+git clone https://github.com/kubernetes/autoscaler.git
+cd autoscaler/vertical-pod-autoscaler
+git checkout origin/vpa-release-1.5
+./hack/vpa-up.sh
+
+## Observe the recomenmder, updater and vpa-admission-controller are succesfully deployed
+
+kubectl get pods -n kube-system
+
+## Deploy simple app with 2 pods and an associated VPA 
+kubectl apply -f https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/examples/hamster.yaml
+
+## Observe the VPA resource
+
+kubectl get vpa --watch
+
+## Observe the pods being modified as the COU consumtion of the "hamster" containeer happens
+## VPA Default mode is recreate pod, as still up to 1.34, VPA does not support InPlaceVPAScaling
+
+kubectl get pods
+
+kubectl get pods hamster-598b78f579-4htc5 -ojsonpath='{.spec.containers[0].resources}'
+
+## Clean up sample resources and tear down the VPA
+
+kubectl delete deploy/hamster vpa/hamster-vpa
+
+./hack/vpa-down.sh
+
+
+
+
