@@ -44,11 +44,11 @@ spec:
         cpu: "700m"
 
 
-2. kubectl create -f pod-resize.yaml
+ kubectl create -f pod-resize.yaml
    root@demo-cluster-all-dtb7d-m4vw4:~# kubectl apply -f demo-pod.yaml
    pod/resize-demo created
 
-3. Increase assigned CPU resources , both requests and limits of the already running pod
+2. Increase assigned CPU resources, both requests and limits of the already running pod
 
    a. Check current status:
       kubectl get pod resize-demo --oyaml
@@ -104,7 +104,7 @@ C.  Increase the requests by an unreasonable ammount of CPU or Memory
 
 # Attempt to patch with an excessively large CPU request
 
-# kubectl patch pod resize-demo --subresource resize --patch \
+kubectl patch pod resize-demo --subresource resize --patch \
   '{"spec":{"containers":[{"name":"pause", "resources":{"requests":{"cpu":"1000"}, "limits":{"cpu":"1000"}}}]}}'
 
 pod/resize-demo patched
@@ -115,7 +115,7 @@ resize-demo   1/1     Running   1 (5m19s ago)   10m
 
 ## Check the status
 
-# kubectl get pod resize-demo -oyaml
+kubectl get pod resize-demo -oyaml
 ....
 
 status:
@@ -129,4 +129,4 @@ status:
     type: PodResizePending
 ....
 
-To fix this, you would need to patch the pod again with feasible resource values.
+To fix this, you would need to patch the pod again with feasible CPU resource values.
