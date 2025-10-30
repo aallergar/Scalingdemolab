@@ -1,8 +1,8 @@
 ## This is a basic demo of a VPA
 ## and a sample application
 ## Requirements: k8s cluster >= 1.28.
-## See available VPA versions in :
-## 
+## See available VPA versions compatibility with k8s version in :
+## https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/docs/installation.md#compatibility
 
 ## INSTALL VPA 
 git clone https://github.com/kubernetes/autoscaler.git
@@ -21,8 +21,10 @@ kubectl apply -f https://github.com/kubernetes/autoscaler/blob/master/vertical-p
 
 kubectl get vpa --watch
 
-## Observe the pods being modified as the COU consumtion of the "hamster" containeer happens
+## Observe the pods being modified as the CPU consumtion of the "hamster" container starts spiking
 ## VPA Default mode is recreate pod, as still up to 1.34, VPA does not support InPlaceVPAScaling
+## For memory resizing, it is recommended to set VPA to Recreate the container
+## For CPU, there is no need to recreate the container.
 
 kubectl get pods
 
