@@ -1,8 +1,8 @@
 ## This is a basic demo of a VPA
 ## and a sample application
 ## Requirements: k8s cluster >= 1.28.
-#3 See VPA versions in :
-
+## See available VPA versions in :
+## 
 
 ## INSTALL VPA 
 git clone https://github.com/kubernetes/autoscaler.git
